@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  # Redis for job queue (development only - use Upstash in production)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./shared:/app/shared
+      - ./temp:/tmp
+    env_file:
+      - .env
+
+  # Background workers
+  worker:
+    build: ./backend
+    command: python workers/worker.py
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./shared:/app/shared
+      - ./workers:/app/workers
+      - ./temp:/tmp
+    env_file:
+      - .env
+    deploy:
+      replicas: 2  # Run 2 worker instances
+
+  # Frontend (development)
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - ./shared:/app/shared
+    depends_on:
+      - backend
+
+volumes:
+  redis_data:
+  temp_data:

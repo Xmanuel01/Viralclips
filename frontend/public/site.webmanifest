@@ -1,0 +1,28 @@
+{
+  "name": "ViralClips.ai - Turn Long Videos into Viral Clips",
+  "short_name": "ViralClips",
+  "description": "Automatically convert long videos into short, viral-ready clips for TikTok, Instagram Reels, and YouTube Shorts",
+  "icons": [
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#7c3aed",
+  "background_color": "#0f0f23",
+  "display": "standalone",
+  "start_url": "/",
+  "scope": "/",
+  "orientation": "portrait"
+}
